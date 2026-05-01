@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <title>Painel de Chamados - VPS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #f1f5f9; --card-bg: #ffffff;
+      --primary: #6366f1; --primary-hover: #4f46e5;
+      --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0;
+      --color-baixa: #3b82f6; --bg-baixa: #eff6ff;
+      --color-media: #10b981; --bg-media: #ecfdf5;
+      --color-alta: #f59e0b; --bg-alta: #fffbeb;
+      --color-urgente: #ef4444; --bg-urgente: #fef2f2;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg-color); color: var(--text-main);
+      display: flex; justify-content: center; min-height: 100vh;
+    }
+
+    .app-container {
+      width: 100%; max-width: 480px; background: var(--card-bg);
+      min-height: 100vh; display: flex; flex-direction: column;
+      position: relative; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+    }
+
+    .header {
+      background: #0f172a; color: white; padding: env(safe-area-inset-top) 24px 24px 24px;
+      border-bottom-left-radius: 24px; border-bottom-right-radius: 24px;
+      position: relative; overflow: hidden; flex-shrink: 0;
+    }
+    .header::after {
+      content: ''; position: absolute; top: -50%; right: -20%;
+      width: 200px; height: 200px; background: var(--primary);
+      filter: blur(80px); border-radius: 50%; opacity: 0.5; z-index: 0;
+    }
+    .header-content { position: relative; z-index: 1; padding-top: 24px; }
+    .header h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 4px; }
+    .header p { color: #94a3b8; font-size: 0.95rem; }
+
+    .content { flex: 1; padding: 32px 24px; overflow-y: auto; padding-bottom: 100px; }
+    .form-group { margin-bottom: 24px; animation: slideUp 0.5s ease-out forwards; opacity: 0; transform: translateY(10px); }
+    .form-group:nth-child(1) { animation-delay: 0.1s; }
+    .form-group:nth-child(2) { animation-delay: 0.2s; }
+    .form-group:nth-child(3) { animation-delay: 0.3s; }
+    .form-group:nth-child(4) { animation-delay: 0.4s; }
+
+    @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+
+    label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; }
+    label span { color: var(--color-urgente); }
+    input, textarea {
+      width: 100%; background: var(--bg-color); border: 1px solid transparent;
+      padding: 16px; border-radius: 16px; font-family: inherit; font-size: 1rem; color: var(--text-main); transition: all 0.3s ease; outline: none;
+    }
+    input:focus, textarea:focus { background: #ffffff; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+    textarea { height: 120px; resize: none; }
+
+    .priority-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .chip {
+      background: var(--bg-color); border: 2px solid transparent; padding: 14px; border-radius: 16px;
+      font-weight: 600; font-size: 0.95rem; text-align: center; cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text-muted);
+    }
+    .chip:active { transform: scale(0.96); }
+    .chip.active-baixa { background: var(--bg-baixa); border-color: var(--color-baixa); color: var(--color-baixa); }
+    .chip.active-media { background: var(--bg-media); border-color: var(--color-media); color: var(--color-media); }
+    .chip.active-alta { background: var(--bg-alta); border-color: var(--color-alta); color: var(--color-alta); }
+    .chip.active-urgente { background: var(--bg-urgente); border-color: var(--color-urgente); color: var(--color-urgente); }
+    .chip-icon { width: 12px; height: 12px; border-radius: 50%; }
+    .c-baixa { background: var(--color-baixa); }
+    .c-media { background: var(--color-media); }
+    .c-alta { background: var(--color-alta); }
+    .c-urgente { background: var(--color-urgente); }
+
+    .bottom-bar {
+      position: absolute; bottom: 0; left: 0; right: 0; padding: 16px 24px;
+      padding-bottom: calc(16px + env(safe-area-inset-bottom));
+      background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border-top: 1px solid var(--border); z-index: 10;
+    }
+    .btn-submit {
+      width: 100%; background: var(--primary); color: white; border: none; padding: 18px; border-radius: 16px;
+      font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s;
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+    }
+    .btn-submit:hover { background: var(--primary-hover); transform: translateY(-2px); }
+    .btn-submit:active { transform: translateY(0); }
+    .btn-submit:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; transform: none; }
+
+    .success-overlay {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--card-bg); z-index: 50;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px;
+      opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+    }
+    .success-overlay.show { opacity: 1; pointer-events: all; }
+    .success-icon-container {
+      width: 100px; height: 100px; background: var(--bg-media); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; margin-bottom: 24px;
+      transform: scale(0.5); transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .success-overlay.show .success-icon-container { transform: scale(1); }
+    .success-icon-container svg { width: 50px; height: 50px; color: var(--color-media); }
+    .success-title { font-size: 1.5rem; font-weight: 700; color: var(--text-main); margin-bottom: 8px; }
+    .success-text { color: var(--text-muted); text-align: center; margin-bottom: 32px; }
+    .ticket-card { background: var(--bg-color); padding: 24px; border-radius: 20px; width: 100%; text-align: center; border: 1px dashed #cbd5e1; margin-bottom: 32px; }
+    .ticket-id { font-size: 2rem; font-weight: 700; color: var(--primary); letter-spacing: 1px; }
+
+    .toast {
+      position: fixed; top: 24px; left: 50%; transform: translate(-50%, -100%); background: #1e293b; color: white;
+      padding: 14px 24px; border-radius: 100px; font-weight: 500; font-size: 0.95rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+      transition: all 0.4s; z-index: 100; opacity: 0; display: flex; align-items: center; gap: 8px;
+    }
+    .toast.show { transform: translate(-50%, 0); opacity: 1; }
+    .loader { border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top: 3px solid white; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <div class="header">
+      <div class="header-content">
+        <h1>Novo Chamado</h1>
+        <p>Preencha os dados para solicitar suporte (Via VPS)</p>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="form-group">
+        <label>Seu Nome / Empresa <span>*</span></label>
+        <input type="text" id="cliente" placeholder="Como podemos te chamar?">
+      </div>
+      <div class="form-group">
+        <label>Assunto Principal <span>*</span></label>
+        <input type="text" id="assunto" placeholder="Resumo do problema">
+      </div>
+      <div class="form-group">
+        <label>Nível de Prioridade <span>*</span></label>
+        <div class="priority-grid">
+          <div class="chip" data-val="Baixa" onclick="setPriority('Baixa')"><div class="chip-icon c-baixa"></div> Baixa</div>
+          <div class="chip" data-val="Média" onclick="setPriority('Média')"><div class="chip-icon c-media"></div> Média</div>
+          <div class="chip" data-val="Alta" onclick="setPriority('Alta')"><div class="chip-icon c-alta"></div> Alta</div>
+          <div class="chip" data-val="Urgente" onclick="setPriority('Urgente')"><div class="chip-icon c-urgente"></div> Urgente</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Descrição Detalhada</label>
+        <textarea id="acoes" placeholder="Conte-nos mais detalhes sobre o que está acontecendo..."></textarea>
+      </div>
+    </div>
+
+    <div class="bottom-bar">
+      <button class="btn-submit" id="btnSubmit" onclick="submitData()">
+        <span class="loader" id="loader"></span>
+        <span id="btnText">Enviar Chamado</span>
+      </button>
+    </div>
+
+    <div class="success-overlay" id="successScreen">
+      <div class="success-icon-container">
+        <svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+        </svg>
+      </div>
+      <h2 class="success-title">Chamado Aberto!</h2>
+      <p class="success-text">Sua solicitação foi salva no nosso Banco de Dados.</p>
+      <div class="ticket-card">
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 8px;">Protocolo</p>
+        <div class="ticket-id" id="ticketId">CHM-0000</div>
+      </div>
+      <button class="btn-submit" style="margin-bottom: 12px; width: 100%;" onclick="resetForm()">
+        Abrir Novo Chamado
+      </button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"><span id="toastIcon">⚠️</span><span id="toastMsg">Mensagem</span></div>
+
+  <script>
+    let priority = '';
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const deviceType = isMobile ? 'Aplicativo (Mobile)' : 'Web (Desktop)';
+
+    function setPriority(val) {
+      priority = val;
+      document.querySelectorAll('.chip').forEach(el => {
+        el.className = 'chip';
+        if(el.getAttribute('data-val') === val) {
+          el.classList.add(`active-${val.toLowerCase().replace('é','e')}`);
+        }
+      });
+    }
+
+    function showToast(msg, isError = true) {
+      const t = document.getElementById('toast');
+      document.getElementById('toastMsg').innerText = msg;
+      document.getElementById('toastIcon').innerText = isError ? '⚠️' : '✅';
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    async function submitData() {
+      const cliente = document.getElementById('cliente').value.trim();
+      const assunto = document.getElementById('assunto').value.trim();
+      const acoes = document.getElementById('acoes').value.trim();
+
+      if (!cliente) return showToast('Preencha seu nome ou empresa.');
+      if (!assunto) return showToast('O assunto é obrigatório.');
+      if (!priority) return showToast('Selecione uma prioridade.');
+
+      const btn = document.getElementById('btnSubmit');
+      const loader = document.getElementById('loader');
+      const text = document.getElementById('btnText');
+      
+      btn.disabled = true; loader.style.display = 'block'; text.innerText = 'Enviando...';
+
+      const payload = { cliente, assunto, prioridade: priority, acoes, dispositivo: deviceType };
+
+      try {
+        const response = await fetch('/api/chamados', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const res = await response.json();
+
+        btn.disabled = false; loader.style.display = 'none'; text.innerText = 'Enviar Chamado';
+
+        if (response.ok && res.sucesso) {
+          document.getElementById('ticketId').innerText = res.id;
+          document.getElementById('successScreen').classList.add('show');
+        } else {
+          showToast('Erro: ' + (res.erro || 'Falha no servidor'));
+        }
+      } catch (err) {
+        btn.disabled = false; loader.style.display = 'none'; text.innerText = 'Enviar Chamado';
+        showToast('Falha na conexão com o servidor.');
+      }
+    }
+
+    function resetForm() {
+      document.getElementById('cliente').value = '';
+      document.getElementById('assunto').value = '';
+      document.getElementById('acoes').value = '';
+      priority = '';
+      document.querySelectorAll('.chip').forEach(el => el.className = 'chip');
+      document.getElementById('successScreen').classList.remove('show');
+    }
+  </script>
+</body>
+</html>
