@@ -61,6 +61,13 @@ app.post('/api/chamados', async (req, res) => {
 
 // Rota para listar chamados (Painel de Administração futuro)
 app.get('/api/chamados', async (req, res) => {
+  const adminToken = process.env.ADMIN_TOKEN;
+  const requestToken = req.get('x-admin-token');
+
+  if (!adminToken || requestToken !== adminToken) {
+    return res.status(401).json({ erro: 'Não autorizado.' });
+  }
+
   try {
     const result = await pool.query('SELECT * FROM chamados ORDER BY id DESC');
     res.json(result.rows);
