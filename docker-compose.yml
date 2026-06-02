@@ -40,6 +40,7 @@ services:
         condition: service_healthy
     networks:
       - chamados_net
+      - proxy_net
 
 volumes:
   pgdata:
@@ -47,3 +48,5 @@ volumes:
 networks:
   chamados_net:
     driver: bridge
+  proxy_net:
+    external: true
